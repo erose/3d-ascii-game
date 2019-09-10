@@ -47,7 +47,6 @@ def render(mesh: mesh.Mesh) -> Dict[Tuple[int, int], str]:
   for x in range(-TERMINAL_WIDTH // 2, TERMINAL_WIDTH // 2):
     for y in range(-TERMINAL_HEIGHT // 2, TERMINAL_HEIGHT // 2):
       point = Point2D.from_terminal_space(x, y)
-      # print(f'point in terminal space: {point}')
       for face in mesh.faces:
         if blocks_ray_cast(point, face):
           pixels[(x, y)] = ASCII_BLOCK
