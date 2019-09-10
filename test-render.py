@@ -39,7 +39,7 @@ class TestRender(unittest.TestCase):
       )
     )
 
-  def test_not_blocks_ray_cast_for_triangle(self):
+  def test_not_blocks_ray_cast_for_square(self):
     self.assertFalse(
       blocks_ray_cast(
         Point2D(100, 100),
