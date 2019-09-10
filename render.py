@@ -1,8 +1,9 @@
 from typing import *
 import mesh
+import statistics, time
 
-TERMINAL_WIDTH = 40
-TERMINAL_HEIGHT = 40
+TERMINAL_WIDTH = 9
+TERMINAL_HEIGHT = 9
 
 # How many units of the scene the player can see at any time, at z = 1.
 VIEWPORT_WIDTH = 2_000_000
@@ -46,17 +47,24 @@ def render(mesh: mesh.Mesh) -> Dict[Tuple[int, int], str]:
   """
 
   pixels = {}
+  times = []
 
   for x in range(TERMINAL_WIDTH):
     for y in range(TERMINAL_HEIGHT):
       point = Point2D.from_terminal_space(x, y)
+
+      start = time.time()
       for face in mesh.faces:
         if blocks_ray_cast(point, face):
           pixels[(x, y)] = ASCII_BLOCK
           break
+      times.append(time.time() - start)
 
     print(f'Column rendered! {x}')
 
+  print(f'time per face (ms): {statistics.mean(times)/len(mesh.faces) * 1000}')
+  print(f'Mean (ms): {statistics.mean(times) * 1000}')
+  print(f'Stdev (ms): {statistics.stdev(times) * 1000}')
   return pixels
 
 def blocks_ray_cast(point: Point2D, face: mesh.Face) -> bool:
