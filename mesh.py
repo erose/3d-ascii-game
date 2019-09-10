@@ -1,4 +1,4 @@
-from typing import List
+from typing import *
 
 class Point3D:
   """
@@ -9,6 +9,10 @@ class Point3D:
     self.x = x
     self.y = y
     self.z = z
+
+  @classmethod
+  def from_tuple(klass, tuple: Tuple[int, int, int]):
+    return klass(tuple[0], tuple[1], tuple[2])
 
   def __repr__(self):
     return f'<{self.x}, {self.y}, {self.z}>'
@@ -25,15 +29,18 @@ class Face:
     self.vertices = vertices
 
   @classmethod
-  def from_vertices(klass, *tuples):
-    return klass([Point3D(t[0], t[1], t[2]) for t in tuples])
+  def covering_tuples(klass, *tuples: Tuple[int, int, int]):
+    """
+    Returns a face which connects the vertices represented by the input tuples.
+    """
+    return klass([Point3D.from_tuple(t) for t in tuples])
 
 class Mesh:
   """
   A single 3D object.
   """
 
-  def __init__(self, vertices: Point3D, faces: Face):
+  def __init__(self, vertices: List[Point3D], faces: List[Face]):
     self.vertices = vertices
     self.faces = faces
 
