@@ -1,8 +1,8 @@
 from typing import *
 import mesh
 
-TERMINAL_WIDTH = 80
-TERMINAL_HEIGHT = 80
+TERMINAL_WIDTH = 40
+TERMINAL_HEIGHT = 40
 
 # How many units of the scene the player can see at any time, at z = 1.
 VIEWPORT_WIDTH = 2_000_000
@@ -31,7 +31,10 @@ class Point2D:
     scene.
     """
 
-    return klass(x * (VIEWPORT_WIDTH / TERMINAL_WIDTH), y * (VIEWPORT_HEIGHT / TERMINAL_HEIGHT))
+    x -= TERMINAL_WIDTH // 2
+    y -= TERMINAL_HEIGHT // 2
+
+    return klass(x * (VIEWPORT_WIDTH // TERMINAL_WIDTH), y * (VIEWPORT_HEIGHT // TERMINAL_HEIGHT))
 
   def __repr__(self):
     return f'<{self.x}, {self.y}>'
@@ -44,12 +47,15 @@ def render(mesh: mesh.Mesh) -> Dict[Tuple[int, int], str]:
 
   pixels = {}
 
-  for x in range(-TERMINAL_WIDTH // 2, TERMINAL_WIDTH // 2):
-    for y in range(-TERMINAL_HEIGHT // 2, TERMINAL_HEIGHT // 2):
+  for x in range(TERMINAL_WIDTH):
+    for y in range(TERMINAL_HEIGHT):
       point = Point2D.from_terminal_space(x, y)
       for face in mesh.faces:
         if blocks_ray_cast(point, face):
           pixels[(x, y)] = ASCII_BLOCK
+          break
+
+    print(f'Column rendered! {x}')
 
   return pixels
 

@@ -14,8 +14,16 @@ class Point3D:
   def from_tuple(klass, tuple: Tuple[int, int, int]):
     return klass(tuple[0], tuple[1], tuple[2])
 
+  def translate(self, x: int, y: int, z: int) -> None:
+    self.x += x
+    self.y += y
+    self.z += z
+
   def __repr__(self):
     return f'<{self.x}, {self.y}, {self.z}>'
+
+  def __eq__(self, other):
+    return self.x == other.x and self.y == other.y and self.z == other.z
 
 class Face:
   """
@@ -35,6 +43,12 @@ class Face:
     """
     return klass([Point3D.from_tuple(t) for t in tuples])
 
+  def __repr__(self):
+    return str(self.vertices)
+
+  def __eq__(self, other):
+    return self.vertices == other.vertices
+
 class Mesh:
   """
   A single 3D object.
@@ -45,4 +59,15 @@ class Mesh:
     self.faces = faces
 
   def translate(self, x: int, y: int, z: int) -> None:
-    raise Exception("Not implemented.")
+    """
+    Moves the mesh along the specified vector. Mutative.
+    """
+
+    for vertex in self.vertices:
+      vertex.translate(x, y, z)
+
+  def __repr__(self):
+    return f'(vertices: {self.vertices}, faces: {self.faces})'
+      
+  def __eq__(self, other):
+    return self.vertices == other.vertices and self.faces == other.faces
