@@ -44,10 +44,6 @@ def render(mesh: mesh.Mesh, terminal_width: int, terminal_height: int) -> Dict[T
 
   pixels = {}
 
-  # REMOVE
-  # faces_in_front_of_us = [face for face in mesh.faces if sum(v.z == 4 for v in face.vertices) == 2]
-  # print('Faces we would see', faces_in_front_of_us[:10])
-
   for x in range(terminal_width):
     for y in range(terminal_height):
       point = Point2D.from_terminal_space(x, y, terminal_width, terminal_height)

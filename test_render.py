@@ -67,6 +67,18 @@ class TestBlocksRayCast(unittest.TestCase):
 
 class TestRender(unittest.TestCase):
   def test_render_small_square(self):
+    small_square = (
+      '          \n'
+      '          \n'
+      '          \n'
+      '          \n'
+      '          \n'
+      '     ▓▓▓  \n'
+      '     ▓▓▓  \n'
+      '     ▓▓▓  \n'
+      '          \n'
+      '          '
+    )
     terminal_width, terminal_height = 10, 10
 
     vertex_tuples = [
@@ -78,12 +90,11 @@ class TestRender(unittest.TestCase):
     face = mesh.Face.covering_tuples(*vertex_tuples)
     test_mesh = mesh.Mesh([mesh.Point3D.from_tuple(p) for p in vertex_tuples], [face])
 
-    print(test_utils.render_to_string(test_mesh, terminal_width, terminal_height))
-    # self.maxDiff = None # These dicts are large; we want to see the whole diff if the test fails.
-    # self.assertEqual(
-    #   {(a, b): ASCII_BLOCK for a in range(5) for b in range(5)},
-    #   render(test_mesh, terminal_width, terminal_height),
-    # )
+    self.maxDiff = None # These strings are large; we want to see the whole diff if the test fails.
+    self.assertEqual(
+      small_square,
+      test_utils.render_to_string(test_mesh, terminal_width, terminal_height)
+    )
 
 if __name__ == "__main__":
   unittest.main()
