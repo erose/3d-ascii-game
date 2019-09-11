@@ -1,14 +1,16 @@
 from typing import *
+import ctypes
 
-class Point3D:
+class Point3D(ctypes.Structure):
   """
   A point in 3D space.
   """
 
-  def __init__(self, x: int, y: int, z: int):
-    self.x = x
-    self.y = y
-    self.z = z
+  _fields_ = [
+    ('x', ctypes.c_int),
+    ('y', ctypes.c_int),
+    ('z', ctypes.c_int),
+  ]
 
   @classmethod
   def from_tuple(klass, tuple: Tuple[int, int, int]):

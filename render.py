@@ -2,8 +2,8 @@ from typing import *
 import mesh
 import statistics, time
 
-TERMINAL_WIDTH = 9
-TERMINAL_HEIGHT = 9
+TERMINAL_WIDTH = 20
+TERMINAL_HEIGHT = 20
 
 # How many units of the scene the player can see at any time, at z = 1.
 VIEWPORT_WIDTH = 2_000_000
@@ -47,24 +47,25 @@ def render(mesh: mesh.Mesh) -> Dict[Tuple[int, int], str]:
   """
 
   pixels = {}
-  times = []
+  # times = []
 
   for x in range(TERMINAL_WIDTH):
     for y in range(TERMINAL_HEIGHT):
       point = Point2D.from_terminal_space(x, y)
 
-      start = time.time()
+      # start = time.time()
       for face in mesh.faces:
         if blocks_ray_cast(point, face):
           pixels[(x, y)] = ASCII_BLOCK
           break
-      times.append(time.time() - start)
+      # times.append(time.time() - start)
 
     print(f'Column rendered! {x}')
 
-  print(f'time per face (ms): {statistics.mean(times)/len(mesh.faces) * 1000}')
-  print(f'Mean (ms): {statistics.mean(times) * 1000}')
-  print(f'Stdev (ms): {statistics.stdev(times) * 1000}')
+  # print(f'time per face (ms): {statistics.mean(times)/len(mesh.faces) * 1000}')
+  # print(f'Mean (ms): {statistics.mean(times) * 1000}')
+  # print(f'Stdev (ms): {statistics.stdev(times) * 1000}')
+  # print(f'Sum (ms): {sum(times)}')
   return pixels
 
 def blocks_ray_cast(point: Point2D, face: mesh.Face) -> bool:
@@ -74,7 +75,6 @@ def blocks_ray_cast(point: Point2D, face: mesh.Face) -> bool:
 
   # Our overall strategy: project the vertices onto the plane of the viewer, then check if the point
   # in question is contained within the projected vertices.
-
   projected_vertices = [Point2D.from_point_3d(v) for v in face.vertices]
 
   # We follow the method described here to determine whether the point is contained in the 2D
