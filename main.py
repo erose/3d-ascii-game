@@ -1,16 +1,20 @@
 import curses, sys
 import terminal, render, parser
 
+# Terminal space goes from (0, 0) to (TERMINAL_WIDTH, TERMINAL_HEIGHT).
+TERMINAL_WIDTH = 120
+TERMINAL_HEIGHT = 120
+
 if __name__ == "__main__":
   filename = "teapot.obj" if len(sys.argv) <= 1 else sys.argv[1]
 
-  with open(sys.argv[1]) as f:
+  with open(filename) as f:
     mesh = parser.mesh_from_obj_file(f)
-    mesh.translate(0, 0, 3) # Don't be in the middle of the teapot!
+    mesh.translate(0, 0, 4_000_000) # Don't be in the middle of the teapot!
 
     curses.wrapper(
       terminal.draw_frame,
-      render.TERMINAL_WIDTH,
-      render.TERMINAL_HEIGHT,
-      render.render(mesh)
+      TERMINAL_WIDTH,
+      TERMINAL_HEIGHT,
+      render.render(mesh, TERMINAL_WIDTH, TERMINAL_HEIGHT)
     )

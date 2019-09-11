@@ -2,18 +2,14 @@ from typing import *
 import mesh
 import statistics, time
 
-TERMINAL_WIDTH = 20
-TERMINAL_HEIGHT = 20
-
-# How many units of the scene the player can see at any time, at z = 1.
-VIEWPORT_WIDTH = 2_000_000
-VIEWPORT_HEIGHT = 2_000_000
+EYE_WIDTH = 2
+EYE_HEIGHT = 2
 
 # W <-- for safekeeping
 ASCII_BLOCK = '▓'
 
 class Point2D:
-  def __init__(self, x, y):
+  def __init__(self, x: float, y: float):
     self.x = x
     self.y = y
 
@@ -26,46 +22,43 @@ class Point2D:
     return klass(point.x / point.z, point.y / point.z)
 
   @classmethod
-  def from_terminal_space(klass, x: int, y: int):
+  def from_terminal_space(klass, x: int, y: int, terminal_width: int, terminal_height: int):
     """
     From coordinates describing a point in the terminal, constructs the corresponding point in the
     scene.
     """
 
-    x -= TERMINAL_WIDTH // 2
-    y -= TERMINAL_HEIGHT // 2
-
-    return klass(x * (VIEWPORT_WIDTH // TERMINAL_WIDTH), y * (VIEWPORT_HEIGHT // TERMINAL_HEIGHT))
+    return klass(
+      (x - terminal_width / 2) * (EYE_WIDTH / terminal_width),
+      (y - terminal_height / 2) * (EYE_HEIGHT / terminal_height),
+    )
 
   def __repr__(self):
     return f'<{self.x}, {self.y}>'
 
-def render(mesh: mesh.Mesh) -> Dict[Tuple[int, int], str]:
+def render(mesh: mesh.Mesh, terminal_width: int, terminal_height: int) -> Dict[Tuple[int, int], str]:
   """
   Returns a 2-D array representation of the mesh as viewed from the point (0, 0, 0). The values in
   the arrays are ASCII characters in the range [0, 255].
   """
 
   pixels = {}
-  # times = []
 
-  for x in range(TERMINAL_WIDTH):
-    for y in range(TERMINAL_HEIGHT):
-      point = Point2D.from_terminal_space(x, y)
+  # REMOVE
+  # faces_in_front_of_us = [face for face in mesh.faces if sum(v.z == 4 for v in face.vertices) == 2]
+  # print('Faces we would see', faces_in_front_of_us[:10])
 
-      # start = time.time()
+  for x in range(terminal_width):
+    for y in range(terminal_height):
+      point = Point2D.from_terminal_space(x, y, terminal_width, terminal_height)
+
       for face in mesh.faces:
         if blocks_ray_cast(point, face):
           pixels[(x, y)] = ASCII_BLOCK
           break
-      # times.append(time.time() - start)
 
-    print(f'Column rendered! {x}')
+    # print(f'Column rendered! {x}')
 
-  # print(f'time per face (ms): {statistics.mean(times)/len(mesh.faces) * 1000}')
-  # print(f'Mean (ms): {statistics.mean(times) * 1000}')
-  # print(f'Stdev (ms): {statistics.stdev(times) * 1000}')
-  # print(f'Sum (ms): {sum(times)}')
   return pixels
 
 def blocks_ray_cast(point: Point2D, face: mesh.Face) -> bool:
@@ -93,7 +86,7 @@ def split_into_triangles(point: Point2D, vertices: List[Point2D]) -> List[List[P
 
   return [[point, a, b] for (a, b) in pairs_of_vertices]
 
-def calculate_2x_area(vertices: List[Point2D]) -> int:
+def calculate_2x_area(vertices: List[Point2D]) -> float:
   """
   Returns the area of the provided polygon, multiplied by 2. (This lets us avoid floats.) Note: this
   method will return incorrect values unless are specified in clockwise OR counterclockwise order.
