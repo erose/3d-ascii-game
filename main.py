@@ -2,8 +2,8 @@ import curses, sys
 import terminal, render, parser
 
 # Terminal space goes from (0, 0) to (TERMINAL_WIDTH, TERMINAL_HEIGHT).
-TERMINAL_WIDTH = 120
-TERMINAL_HEIGHT = 120
+TERMINAL_WIDTH = 60
+TERMINAL_HEIGHT = 60
 
 if __name__ == "__main__":
   filename = "teapot.obj" if len(sys.argv) <= 1 else sys.argv[1]

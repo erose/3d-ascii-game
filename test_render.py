@@ -73,9 +73,9 @@ class TestRender(unittest.TestCase):
       '          \n'
       '          \n'
       '          \n'
-      '     ▓▓▓  \n'
-      '     ▓▓▓  \n'
-      '     ▓▓▓  \n'
+      '     ▓▓   \n'
+      '     ▓▓   \n'
+      '          \n'
       '          \n'
       '          '
     )

@@ -1,6 +1,6 @@
 from typing import *
+import statistics, time, os, ctypes
 import mesh
-import statistics, time
 
 EYE_WIDTH = 2
 EYE_HEIGHT = 2
@@ -9,6 +9,11 @@ EYE_HEIGHT = 2
 ASCII_BLOCK = '▓'
 
 class Point2D:
+  # _fields_ = [
+  #   ('x', ctypes.c_float),
+  #   ('y', ctypes.c_float),
+  # ]
+
   def __init__(self, x: float, y: float):
     self.x = x
     self.y = y
@@ -28,13 +33,16 @@ class Point2D:
     scene.
     """
 
+    # (x, y) is the upper left corner of the pixel we're filling in. (x + 0.5, y + 0.5) is the middle.
     return klass(
-      (x - terminal_width / 2) * (EYE_WIDTH / terminal_width),
-      (y - terminal_height / 2) * (EYE_HEIGHT / terminal_height),
+      (x + 0.5 - terminal_width / 2) * (EYE_WIDTH / terminal_width),
+      (y + 0.5 - terminal_height / 2) * (EYE_HEIGHT / terminal_height),
     )
 
   def __repr__(self):
     return f'<{self.x}, {self.y}>'
+
+# class Face2D
 
 def render(mesh: mesh.Mesh, terminal_width: int, terminal_height: int) -> Dict[Tuple[int, int], str]:
   """
@@ -53,7 +61,8 @@ def render(mesh: mesh.Mesh, terminal_width: int, terminal_height: int) -> Dict[T
           pixels[(x, y)] = ASCII_BLOCK
           break
 
-    # print(f'Column rendered! {x}')
+    if os.environ.get('VERBOSE'):
+      print(f'Column rendered! {x}')
 
   return pixels
 
