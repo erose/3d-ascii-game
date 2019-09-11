@@ -8,15 +8,11 @@ EYE_HEIGHT = 2
 # W <-- for safekeeping
 ASCII_BLOCK = '▓'
 
-class Point2D:
-  # _fields_ = [
-  #   ('x', ctypes.c_float),
-  #   ('y', ctypes.c_float),
-  # ]
-
-  def __init__(self, x: float, y: float):
-    self.x = x
-    self.y = y
+class EyeSpacePoint(ctypes.Structure):
+  _fields_ = [
+    ('x', ctypes.c_float),
+    ('y', ctypes.c_float),
+  ]
 
   @classmethod
   def from_point_3d(klass, point: mesh.Point3D):
@@ -42,7 +38,17 @@ class Point2D:
   def __repr__(self):
     return f'<{self.x}, {self.y}>'
 
-# class Face2D
+class EyeSpacePolygon:
+  # _fields_ = [
+  # ]
+
+  def __init__(self, vertices: List[EyeSpacePoint]):
+    self.vertices = vertices
+
+  @classmethod
+  def from_face(klass, face: mesh.Face):
+    vertices = [EyeSpacePoint.from_point_3d(v) for v in face.vertices]
+    return klass(vertices)
 
 def render(mesh: mesh.Mesh, terminal_width: int, terminal_height: int) -> Dict[Tuple[int, int], str]:
   """
@@ -54,7 +60,7 @@ def render(mesh: mesh.Mesh, terminal_width: int, terminal_height: int) -> Dict[T
 
   for x in range(terminal_width):
     for y in range(terminal_height):
-      point = Point2D.from_terminal_space(x, y, terminal_width, terminal_height)
+      point = EyeSpacePoint.from_terminal_space(x, y, terminal_width, terminal_height)
 
       for face in mesh.faces:
         if blocks_ray_cast(point, face):
@@ -66,32 +72,32 @@ def render(mesh: mesh.Mesh, terminal_width: int, terminal_height: int) -> Dict[T
 
   return pixels
 
-def blocks_ray_cast(point: Point2D, face: mesh.Face) -> bool:
+def blocks_ray_cast(point: EyeSpacePoint, face: mesh.Face) -> bool:
   """
   Returns true if the face blocks a ray cast from the origin to the specified point.
   """
 
   # Our overall strategy: project the vertices onto the plane of the viewer, then check if the point
   # in question is contained within the projected vertices.
-  projected_vertices = [Point2D.from_point_3d(v) for v in face.vertices]
+  polgyon = EyeSpacePolygon.from_face(face)
 
   # We follow the method described here to determine whether the point is contained in the 2D
   # projection of the face.
   # https://math.stackexchange.com/questions/3350182/does-this-method-of-determining-whether-a-point-is-included-in-a-polygon-work-a
   
   # Calculate the area of various triangles.
-  triangles = split_into_triangles(point, projected_vertices)
+  triangles = split_into_triangles(point, polgyon.vertices)
   areas = [calculate_2x_area(t) for t in triangles]
 
-  return sum(areas) == calculate_2x_area(projected_vertices)
+  return sum(areas) == calculate_2x_area(polgyon.vertices)
 
-def split_into_triangles(point: Point2D, vertices: List[Point2D]) -> List[List[Point2D]]:
+def split_into_triangles(point: EyeSpacePoint, vertices: List[EyeSpacePoint]) -> List[List[EyeSpacePoint]]:
   # All consecutive pairs, wrapping around.
   pairs_of_vertices = zip(vertices, vertices[1:] + [vertices[0]])
 
   return [[point, a, b] for (a, b) in pairs_of_vertices]
 
-def calculate_2x_area(vertices: List[Point2D]) -> float:
+def calculate_2x_area(vertices: List[EyeSpacePoint]) -> float:
   """
   Returns the area of the provided polygon, multiplied by 2. (This lets us avoid floats.) Note: this
   method will return incorrect values unless are specified in clockwise OR counterclockwise order.
