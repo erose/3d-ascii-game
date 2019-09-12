@@ -12,12 +12,20 @@ typedef struct {
   Point end;
 } Vector;
 
+typedef struct { 
+  float min_x;
+  float max_x;
+  float min_y;
+  float max_y;
+} BoundingBox;
+
 typedef struct {
   Point* vertices;
   int num_vertices;
+  BoundingBox box;
 } Polygon;
 
-float min_x(Polygon polygon) {
+float find_min_x(Polygon polygon) {
   float result = INFINITY;
   for (int i = 0; i < polygon.num_vertices; i++) {
     if (result > polygon.vertices[i].x) {
@@ -28,7 +36,7 @@ float min_x(Polygon polygon) {
   return result;
 }
 
-float max_x(Polygon polygon) {
+float find_max_x(Polygon polygon) {
   float result = -INFINITY;
   for (int i = 0; i < polygon.num_vertices; i++) {
     if (result < polygon.vertices[i].x) {
@@ -38,6 +46,29 @@ float max_x(Polygon polygon) {
 
   return result;
 }
+
+float find_min_y(Polygon polygon) {
+  float result = INFINITY;
+  for (int i = 0; i < polygon.num_vertices; i++) {
+    if (result > polygon.vertices[i].y) {
+      result = polygon.vertices[i].y;
+    }
+  }
+
+  return result;
+}
+
+float find_max_y(Polygon polygon) {
+  float result = -INFINITY;
+  for (int i = 0; i < polygon.num_vertices; i++) {
+    if (result < polygon.vertices[i].y) {
+      result = polygon.vertices[i].y;
+    }
+  }
+
+  return result;
+}
+
 
 // TODO: Explain.
 bool are_intersecting(Vector v1, Vector v2) {
@@ -94,14 +125,30 @@ bool are_intersecting(Vector v1, Vector v2) {
   return true;
 }
 
+/**
+ * This is an optimization to fail fast when checking if a point is inside a polygon.
+ */
+bool is_within_bounding_box(Point coordinate, BoundingBox box) {
+  return (
+    coordinate.x > box.min_x
+    && coordinate.x < box.max_x
+    && coordinate.y > box.min_y
+    && coordinate.y < box.max_y
+  );
+}
+
 bool is_contained(Point point, Polygon polygon) {
   float epsilon = 1.0;
 
+  if (!is_within_bounding_box(point, polygon.box)) {
+    return false;
+  }
+
   // Test the ray against all sides.
   // TODO: Explain.
-  int ray_vector_x2 = (max_x(polygon) <= point.x)
-    ? min_x(polygon) - epsilon
-    : max_x(polygon) + epsilon;
+  int ray_vector_x2 = (polygon.box.max_x <= point.x)
+    ? polygon.box.min_x - epsilon
+    : polygon.box.max_x + epsilon;
 
   Vector ray = {
     .start = point,
@@ -122,11 +169,38 @@ bool is_contained(Point point, Polygon polygon) {
   return (intersections % 2) == 1;
 }
 
+/** 
+ * Calculates the bounding box for each polygon, then returns the bounding box for the mesh itself.
+ */
+void populate_bounding_boxes(Polygon polygons[], int num_polygons, BoundingBox* mesh_box_ptr) {
+  for (int i = 0; i < num_polygons; i++) {
+    float min_x = find_min_x(polygons[i]);
+    float max_x = find_max_x(polygons[i]);
+    float min_y = find_min_y(polygons[i]);
+    float max_y = find_max_y(polygons[i]);
+
+    polygons[i].box.min_x = min_x;
+    polygons[i].box.max_x = max_x;
+    polygons[i].box.min_y = min_y;
+    polygons[i].box.max_y = max_y;
+
+    BoundingBox mesh_box = *mesh_box_ptr;
+    mesh_box.min_x = (min_x < mesh_box.min_x) ? min_x : mesh_box.min_x;
+    mesh_box.max_x = (max_x < mesh_box.max_x) ? max_x : mesh_box.max_x;
+    mesh_box.min_y = (min_y < mesh_box.min_y) ? min_y : mesh_box.min_y;
+    mesh_box.max_y = (max_y < mesh_box.max_y) ? max_y : mesh_box.max_y;
+  }
+}
+
 // TODO: Comment.
 float EYE_WIDTH = 2.0;
 float EYE_HEIGHT = 2.0;
 
 void render(Polygon polygons[], int num_polygons, int terminal_width, int terminal_height, char pixels[][terminal_width]) {
+  // Cache information we need later.
+  BoundingBox mesh_box = {.min_x = -INFINITY, .max_x = INFINITY, .min_y = -INFINITY, .max_y = INFINITY };
+  populate_bounding_boxes(polygons, num_polygons, &mesh_box);
+
   for (int y = 0; y < terminal_height; y++) {
     for (int x = 0; x < terminal_width; x++) {
 
@@ -134,8 +208,14 @@ void render(Polygon polygons[], int num_polygons, int terminal_width, int termin
       // (x, y) is the upper left corner of the pixel we're filling in. (x + 0.5, y + 0.5) is the middle.
       Point terminal_coordinate = {
         .x = (x + 0.5 - terminal_width / 2.0) * (EYE_WIDTH / terminal_width),
-        .y = (y + 0.5 - terminal_height / 2.0) * (EYE_HEIGHT / terminal_height)
+
+        // TODO: Explain negative sign.
+        .y = -(y + 0.5 - terminal_height / 2.0) * (EYE_HEIGHT / terminal_height)
       };
+
+      if (!is_within_bounding_box(terminal_coordinate, mesh_box)) {
+        continue;
+      }
 
       for (int i = 0; i < num_polygons; i++) {
         if (is_contained(terminal_coordinate, polygons[i])) {

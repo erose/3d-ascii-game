@@ -1,7 +1,6 @@
 from typing import *
-import statistics, time, os, ctypes
-import mesh
-import time
+import statistics, time, os, math, ctypes
+import mesh, log
 
 class EyeSpacePoint(ctypes.Structure):
   _fields_ = [
@@ -15,7 +14,8 @@ class EyeSpacePoint(ctypes.Structure):
     Projects the input point onto a 2-D plane, scaling appropriately for distance.
     """
 
-    return klass(point.x / point.z, point.y / point.z)
+    distance = math.sqrt(point.x**2 + point.y**2 + point.z**2)
+    return klass(point.x / distance, point.y / distance)
 
   def __repr__(self):
     return f'<{self.x}, {self.y}>'
@@ -24,6 +24,11 @@ class EyeSpacePolygon(ctypes.Structure):
   _fields_ = [
     ('vertices', ctypes.POINTER(EyeSpacePoint)),
     ('num_vertices', ctypes.c_int),
+
+    ('min_x', ctypes.c_float),
+    ('max_x', ctypes.c_float),
+    ('min_y', ctypes.c_float),
+    ('max_y', ctypes.c_float),
   ]
 
   def __init__(self, vertices):
@@ -68,7 +73,7 @@ def render(mesh: mesh.Mesh, terminal_width: int, terminal_height: int) -> Dict[T
   # Mutates c_pixel_array.
   start = time.time()
   librender.render(c_polygons, len(c_polygons), terminal_width, terminal_height, c_pixel_array)
-  print('C portion of render took', time.time() - start, 'seconds')
+  log.log('C portion of render took', time.time() - start, 'seconds')
 
   for x in range(terminal_width):
     for y in range(terminal_height):
