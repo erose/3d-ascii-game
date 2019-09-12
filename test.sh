@@ -1,3 +1,3 @@
 #!/bin/sh
 
-mypy *.py && python -m unittest discover .
+gcc -O3 -fPIC -shared -o librender.so render.c && mypy *.py && python -m unittest discover .
