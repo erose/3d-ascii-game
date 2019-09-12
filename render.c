@@ -12,21 +12,17 @@ typedef struct {
   Point end;
 } Vector;
 
-typedef struct { 
+typedef struct {
+  Point* vertices;
+  int num_vertices;
+  // Useful for determining bounding boxes.
   float min_x;
   float max_x;
   float min_y;
   float max_y;
-} BoundingBox;
-
-typedef struct {
-  Point* vertices;
-  int num_vertices;
-  BoundingBox box;
 } Polygon;
 
-
-float find_min_x(Polygon polygon) {
+float min_x(Polygon polygon) {
   float result = INFINITY;
   for (int i = 0; i < polygon.num_vertices; i++) {
     if (result > polygon.vertices[i].x) {
@@ -37,7 +33,7 @@ float find_min_x(Polygon polygon) {
   return result;
 }
 
-float find_max_x(Polygon polygon) {
+float max_x(Polygon polygon) {
   float result = -INFINITY;
   for (int i = 0; i < polygon.num_vertices; i++) {
     if (result < polygon.vertices[i].x) {
@@ -48,7 +44,7 @@ float find_max_x(Polygon polygon) {
   return result;
 }
 
-float find_min_y(Polygon polygon) {
+float min_y(Polygon polygon) {
   float result = INFINITY;
   for (int i = 0; i < polygon.num_vertices; i++) {
     if (result > polygon.vertices[i].y) {
@@ -59,7 +55,7 @@ float find_min_y(Polygon polygon) {
   return result;
 }
 
-float find_max_y(Polygon polygon) {
+float max_y(Polygon polygon) {
   float result = -INFINITY;
   for (int i = 0; i < polygon.num_vertices; i++) {
     if (result < polygon.vertices[i].y) {
@@ -129,27 +125,28 @@ bool are_intersecting(Vector v1, Vector v2) {
 /**
  * This is an optimization to fail fast when checking if a point is inside a polygon.
  */
-bool is_within_bounding_box(Point coordinate, BoundingBox box) {
+bool is_within_bounding_box(Point coordinate, Polygon polygon) {
   return (
-    coordinate.x > box.min_x
-    && coordinate.x < box.max_x
-    && coordinate.y > box.min_y
-    && coordinate.y < box.max_y
+    coordinate.x > polygon.min_x
+    && coordinate.x < polygon.max_x
+    && coordinate.y > polygon.min_y
+    && coordinate.y < polygon.max_y
   );
 }
 
 bool is_contained(Point point, Polygon polygon) {
   float epsilon = 1.0;
+  // printf("%s\n", "is_contained");
 
-  if (!is_within_bounding_box(point, polygon.box)) {
+  if (!is_within_bounding_box(point, polygon)) {
     return false;
   }
 
   // Test the ray against all sides.
   // TODO: Explain.
-  int ray_vector_x2 = (polygon.box.max_x <= point.x)
-    ? polygon.box.min_x - epsilon
-    : polygon.box.max_x + epsilon;
+  int ray_vector_x2 = (max_x(polygon) <= point.x)
+    ? min_x(polygon) - epsilon
+    : max_x(polygon) + epsilon;
 
   Vector ray = {
     .start = point,
@@ -170,17 +167,12 @@ bool is_contained(Point point, Polygon polygon) {
   return (intersections % 2) == 1;
 }
 
-void populate_bounding_boxes(Polygon polygons[], int num_polygons) {
+void populate_extremas(Polygon polygons[], int num_polygons) {
   for (int i = 0; i < num_polygons; i++) {
-    float min_x = find_min_x(polygons[i]);
-    float max_x = find_max_x(polygons[i]);
-    float min_y = find_min_y(polygons[i]);
-    float max_y = find_max_y(polygons[i]);
-
-    polygons[i].box.min_x = min_x;
-    polygons[i].box.max_x = max_x;
-    polygons[i].box.min_y = min_y;
-    polygons[i].box.max_y = max_y;
+    polygons[i].min_x = min_x(polygons[i]);
+    polygons[i].max_x = max_x(polygons[i]);
+    polygons[i].min_y = min_y(polygons[i]);
+    polygons[i].max_y = max_y(polygons[i]);
   }
 }
 
@@ -190,7 +182,7 @@ float EYE_HEIGHT = 2.0;
 
 void render(Polygon polygons[], int num_polygons, int terminal_width, int terminal_height, char pixels[][terminal_width]) {
   // Cache information we need later.
-  populate_bounding_boxes(polygons, num_polygons);
+  populate_extremas(polygons, num_polygons);
 
   for (int y = 0; y < terminal_height; y++) {
     for (int x = 0; x < terminal_width; x++) {
