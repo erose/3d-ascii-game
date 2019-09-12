@@ -139,18 +139,18 @@ bool is_within_bounding_box(Point coordinate, BoundingBox* box_ptr) {
   );
 }
 
-bool is_contained(Point point, Polygon polygon) {
+bool is_contained(Point point, Polygon* polygon_ptr) {
   float epsilon = 1.0;
 
-  if (!is_within_bounding_box(point, &(polygon.box))) {
+  if (!is_within_bounding_box(point, &(polygon_ptr->box))) {
     return false;
   }
 
   // Test the ray against all sides.
   // TODO: Explain.
-  int ray_vector_x2 = (polygon.box.max_x <= point.x)
-    ? polygon.box.min_x - epsilon
-    : polygon.box.max_x + epsilon;
+  int ray_vector_x2 = (polygon_ptr->box.max_x <= point.x)
+    ? polygon_ptr->box.min_x - epsilon
+    : polygon_ptr->box.max_x + epsilon;
 
   Vector ray = {
     .start = point,
@@ -158,9 +158,9 @@ bool is_contained(Point point, Polygon polygon) {
   };
 
   int intersections = 0;
-  for (int i = 0; i < polygon.num_vertices; i++) {
-    int j = (i + 1) % polygon.num_vertices;
-    Vector side = { .start = polygon.vertices[i], .end = polygon.vertices[j] };
+  for (int i = 0; i < polygon_ptr->num_vertices; i++) {
+    int j = (i + 1) % polygon_ptr->num_vertices;
+    Vector side = { .start = polygon_ptr->vertices[i], .end = polygon_ptr->vertices[j] };
 
     if (are_intersecting(ray, side)) {
       intersections++;
@@ -215,7 +215,7 @@ void render(Polygon polygons[], int num_polygons, int terminal_width, int termin
 
 
       for (int i = 0; i < num_polygons; i++) {
-        if (is_contained(terminal_coordinate, polygons[i])) {
+        if (is_contained(terminal_coordinate, &polygons[i])) {
           pixels[y][x] = 'W'; // TODO: replace with '▓'?
           break;
         }
