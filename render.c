@@ -1,6 +1,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <sys/time.h>
+
 
 typedef struct {
   float x;
@@ -136,7 +138,6 @@ bool is_within_bounding_box(Point coordinate, Polygon polygon) {
 
 bool is_contained(Point point, Polygon polygon) {
   float epsilon = 1.0;
-  // printf("%s\n", "is_contained");
 
   if (!is_within_bounding_box(point, polygon)) {
     return false;
@@ -176,13 +177,23 @@ void populate_extremas(Polygon polygons[], int num_polygons) {
   }
 }
 
+// TODO: Remove.
+long millisecondsSinceEpoch() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+
+  return (long)(tv.tv_sec) * 1000 + (long)(tv.tv_usec) / 1000;
+}
+
 // TODO: Comment.
 float EYE_WIDTH = 2.0;
 float EYE_HEIGHT = 2.0;
 
 void render(Polygon polygons[], int num_polygons, int terminal_width, int terminal_height, char pixels[][terminal_width]) {
   // Cache information we need later.
+  long start = millisecondsSinceEpoch();
   populate_extremas(polygons, num_polygons);
+  printf("populate extremas %lu\n", millisecondsSinceEpoch() - start);
 
   for (int y = 0; y < terminal_height; y++) {
     for (int x = 0; x < terminal_width; x++) {
