@@ -1,6 +1,7 @@
 from typing import *
 import statistics, time, os, ctypes
 import mesh
+import time
 
 class EyeSpacePoint(ctypes.Structure):
   _fields_ = [
@@ -65,7 +66,9 @@ def render(mesh: mesh.Mesh, terminal_width: int, terminal_height: int) -> Dict[T
   c_polygons = (EyeSpacePolygon * len(polygons))(*polygons)
 
   # Mutates c_pixel_array.
+  start = time.time()
   librender.render(c_polygons, len(c_polygons), terminal_width, terminal_height, c_pixel_array)
+  print('C portion of render took', time.time() - start, 'seconds')
 
   for x in range(terminal_width):
     for y in range(terminal_height):

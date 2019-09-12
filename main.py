@@ -2,8 +2,8 @@ import curses, sys
 import terminal, render, parser
 
 # Terminal space goes from (0, 0) to (TERMINAL_WIDTH, TERMINAL_HEIGHT).
-TERMINAL_WIDTH = 60
-TERMINAL_HEIGHT = 60
+TERMINAL_WIDTH = 252
+TERMINAL_HEIGHT = 252
 
 def assert_terminal_size():
   # Initialize the curses window just to get the terminal size, de-initializing it immediately
@@ -11,9 +11,9 @@ def assert_terminal_size():
   max_terminal_height, max_terminal_width = curses.initscr().getmaxyx()
   curses.endwin()
 
-  if max_terminal_width > TERMINAL_WIDTH:
+  if max_terminal_width < TERMINAL_WIDTH:
     raise Exception(f'Requested terminal width is {TERMINAL_WIDTH}, but the window has width {max_terminal_width}.')
-  if max_terminal_height > TERMINAL_HEIGHT:
+  if max_terminal_height < TERMINAL_HEIGHT:
     raise Exception(f'Requested terminal height is {TERMINAL_HEIGHT}, but the window has height {max_terminal_height}.')
 
 if __name__ == "__main__":
@@ -25,8 +25,8 @@ if __name__ == "__main__":
     mesh.translate(0, 0, 4_000_000) # Don't be in the middle of the teapot!
 
     curses.wrapper(
-      terminal.draw_frame,
+      terminal.start_session,
       TERMINAL_WIDTH,
       TERMINAL_HEIGHT,
-      render.render(mesh, TERMINAL_WIDTH, TERMINAL_HEIGHT)
+      mesh,
     )
