@@ -1,6 +1,6 @@
 from typing import *
 import statistics, time, os, math, ctypes
-import mesh, log
+import mesh, log, math
 
 class EyeSpacePoint(ctypes.Structure):
   _fields_ = [
@@ -9,13 +9,16 @@ class EyeSpacePoint(ctypes.Structure):
   ]
 
   @classmethod
-  def from_point_3d(klass, point: mesh.Point3D):
+  def from_point_3d(klass, point: mesh.Point3D, theta: int):
     """
     Projects the input point onto a 2-D plane, scaling appropriately for distance.
     """
 
     distance = math.sqrt(point.x**2 + point.y**2 + point.z**2)
-    return klass(point.x / distance, point.y / distance)
+    return klass(
+      (point.x * math.cos(math.radians(theta)) + point.z * math.sin(math.radians(theta))) / distance,
+      point.y / distance
+    )
 
   def __repr__(self):
     return f'<{self.x}, {self.y}>'
@@ -36,8 +39,8 @@ class EyeSpacePolygon(ctypes.Structure):
     self.num_vertices = len(vertices)
 
   @classmethod
-  def from_face(klass, face: mesh.Face):
-    vertices = [EyeSpacePoint.from_point_3d(v) for v in face.vertices]
+  def from_face(klass, face: mesh.Face, theta: int):
+    vertices = [EyeSpacePoint.from_point_3d(v, theta) for v in face.vertices]
     return klass(vertices)
 
 def render(mesh: mesh.Mesh, terminal_width: int, terminal_height: int) -> Dict[Tuple[int, int], str]:
@@ -49,7 +52,7 @@ def render(mesh: mesh.Mesh, terminal_width: int, terminal_height: int) -> Dict[T
   pixels : Dict[Tuple[int, int], str] = {}
 
   librender = ctypes.CDLL('/home/eli/Personal/Repositories/3d-ascii-game/librender.so')
-  polygons = [EyeSpacePolygon.from_face(face) for face in mesh.faces]
+  polygons = [EyeSpacePolygon.from_face(face, mesh.theta) for face in mesh.faces]
 
   # TODO: Explain.
   PixelsRow = ctypes.c_char * terminal_width

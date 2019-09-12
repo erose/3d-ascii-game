@@ -20,15 +20,6 @@ class Point3D:
     self.y += y
     self.z += z
 
-  def rotate_xz(self, theta: int) -> None:
-    """
-    Rotate the point counterclockwise around (0, 0) through the xz-plane by the specified theta (in degrees).
-    """
-
-    radians = math.radians(theta)
-    self.x = int(self.x * math.cos(radians) - self.z * math.sin(radians))
-    self.z = int(self.x * math.sin(radians) + self.z * math.cos(radians))
-
   def __repr__(self):
     return f'<{self.x}, {self.y}, {self.z}>'
 
@@ -67,6 +58,7 @@ class Mesh:
   def __init__(self, vertices: List[Point3D], faces: List[Face]):
     self.vertices = vertices
     self.faces = faces
+    self.theta = 0
 
   def translate(self, x: int, y: int, z: int) -> None:
     """
@@ -81,8 +73,7 @@ class Mesh:
     Rotate all vertices counterclockwise around (0, 0) through the xz-plane by the specified theta (in degrees).
     """
     
-    for vertex in self.vertices:
-      vertex.rotate_xz(theta)
+    self.theta += theta
 
   def __repr__(self):
     return f'(vertices: {self.vertices}, faces: {self.faces})'
