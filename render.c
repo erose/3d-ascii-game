@@ -25,6 +25,7 @@ typedef struct {
   BoundingBox box;
 } Polygon;
 
+
 float find_min_x(Polygon polygon) {
   float result = INFINITY;
   for (int i = 0; i < polygon.num_vertices; i++) {
@@ -169,10 +170,7 @@ bool is_contained(Point point, Polygon polygon) {
   return (intersections % 2) == 1;
 }
 
-/** 
- * Calculates the bounding box for each polygon, then returns the bounding box for the mesh itself.
- */
-void populate_bounding_boxes(Polygon polygons[], int num_polygons, BoundingBox* mesh_box_ptr) {
+void populate_bounding_boxes(Polygon polygons[], int num_polygons) {
   for (int i = 0; i < num_polygons; i++) {
     float min_x = find_min_x(polygons[i]);
     float max_x = find_max_x(polygons[i]);
@@ -183,12 +181,6 @@ void populate_bounding_boxes(Polygon polygons[], int num_polygons, BoundingBox* 
     polygons[i].box.max_x = max_x;
     polygons[i].box.min_y = min_y;
     polygons[i].box.max_y = max_y;
-
-    BoundingBox mesh_box = *mesh_box_ptr;
-    mesh_box.min_x = (min_x < mesh_box.min_x) ? min_x : mesh_box.min_x;
-    mesh_box.max_x = (max_x < mesh_box.max_x) ? max_x : mesh_box.max_x;
-    mesh_box.min_y = (min_y < mesh_box.min_y) ? min_y : mesh_box.min_y;
-    mesh_box.max_y = (max_y < mesh_box.max_y) ? max_y : mesh_box.max_y;
   }
 }
 
@@ -198,8 +190,7 @@ float EYE_HEIGHT = 2.0;
 
 void render(Polygon polygons[], int num_polygons, int terminal_width, int terminal_height, char pixels[][terminal_width]) {
   // Cache information we need later.
-  BoundingBox mesh_box = {.min_x = -INFINITY, .max_x = INFINITY, .min_y = -INFINITY, .max_y = INFINITY };
-  populate_bounding_boxes(polygons, num_polygons, &mesh_box);
+  populate_bounding_boxes(polygons, num_polygons);
 
   for (int y = 0; y < terminal_height; y++) {
     for (int x = 0; x < terminal_width; x++) {
@@ -213,9 +204,6 @@ void render(Polygon polygons[], int num_polygons, int terminal_width, int termin
         .y = -(y + 0.5 - terminal_height / 2.0) * (EYE_HEIGHT / terminal_height)
       };
 
-      if (!is_within_bounding_box(terminal_coordinate, mesh_box)) {
-        continue;
-      }
 
       for (int i = 0; i < num_polygons; i++) {
         if (is_contained(terminal_coordinate, polygons[i])) {
