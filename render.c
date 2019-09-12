@@ -72,7 +72,6 @@ float find_max_y(Polygon polygon) {
   return result;
 }
 
-
 // TODO: Explain.
 bool are_intersecting(Vector v1, Vector v2) {
   float d1, d2;
@@ -131,19 +130,19 @@ bool are_intersecting(Vector v1, Vector v2) {
 /**
  * This is an optimization to fail fast when checking if a point is inside a polygon.
  */
-bool is_within_bounding_box(Point coordinate, BoundingBox box) {
+bool is_within_bounding_box(Point coordinate, BoundingBox* box_ptr) {
   return (
-    coordinate.x > box.min_x
-    && coordinate.x < box.max_x
-    && coordinate.y > box.min_y
-    && coordinate.y < box.max_y
+    coordinate.x > box_ptr->min_x
+    && coordinate.x < box_ptr->max_x
+    && coordinate.y > box_ptr->min_y
+    && coordinate.y < box_ptr->max_y
   );
 }
 
 bool is_contained(Point point, Polygon polygon) {
   float epsilon = 1.0;
 
-  if (!is_within_bounding_box(point, polygon.box)) {
+  if (!is_within_bounding_box(point, &(polygon.box))) {
     return false;
   }
 
@@ -200,9 +199,7 @@ float EYE_HEIGHT = 2.0;
 
 void render(Polygon polygons[], int num_polygons, int terminal_width, int terminal_height, char pixels[][terminal_width]) {
   // Cache information we need later.
-  long start = millisecondsSinceEpoch();
   populate_bounding_boxes(polygons, num_polygons);
-  printf("populate_bounding_boxes %lu\n", millisecondsSinceEpoch() - start);
 
   for (int y = 0; y < terminal_height; y++) {
     for (int x = 0; x < terminal_width; x++) {
