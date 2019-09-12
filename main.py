@@ -2,8 +2,8 @@ import curses, sys
 import terminal, render, parser
 
 # Terminal space goes from (0, 0) to (TERMINAL_WIDTH, TERMINAL_HEIGHT).
-TERMINAL_WIDTH = 252
-TERMINAL_HEIGHT = 252
+TERMINAL_WIDTH = 120
+TERMINAL_HEIGHT = 120
 
 def assert_terminal_size():
   # Initialize the curses window just to get the terminal size, de-initializing it immediately

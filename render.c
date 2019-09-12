@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <sys/time.h>
 
-
 typedef struct {
   float x;
   float y;
@@ -171,7 +170,7 @@ bool is_contained(Point point, Polygon* polygon_ptr) {
   return (intersections % 2) == 1;
 }
 
-void populate_bounding_boxes(Polygon polygons[], int num_polygons) {
+void populate_bounding_boxes(Polygon polygons[], int num_polygons, BoundingBox *mesh_box_ptr) {
   for (int i = 0; i < num_polygons; i++) {
     float min_x = find_min_x(polygons[i]);
     float max_x = find_max_x(polygons[i]);
@@ -182,6 +181,11 @@ void populate_bounding_boxes(Polygon polygons[], int num_polygons) {
     polygons[i].box.max_x = max_x;
     polygons[i].box.min_y = min_y;
     polygons[i].box.max_y = max_y;
+
+    (*mesh_box_ptr).min_x = (min_x < (*mesh_box_ptr).min_x) ? (*mesh_box_ptr).min_x = min_x : (*mesh_box_ptr).min_x;
+    (*mesh_box_ptr).max_x = (max_x > (*mesh_box_ptr).max_x) ? (*mesh_box_ptr).max_x = max_x : (*mesh_box_ptr).max_x;
+    (*mesh_box_ptr).min_y = (min_y < (*mesh_box_ptr).min_y) ? (*mesh_box_ptr).min_y = min_y : (*mesh_box_ptr).min_y;
+    (*mesh_box_ptr).max_y = (max_y > (*mesh_box_ptr).max_y) ? (*mesh_box_ptr).max_y = max_y : (*mesh_box_ptr).max_y;
   }
 }
 
@@ -199,7 +203,8 @@ float EYE_HEIGHT = 2.0;
 
 void render(Polygon polygons[], int num_polygons, int terminal_width, int terminal_height, char pixels[][terminal_width]) {
   // Cache information we need later.
-  populate_bounding_boxes(polygons, num_polygons);
+  BoundingBox mesh_box = { .min_x = INFINITY, .max_x = -INFINITY, .min_y = INFINITY, .max_y = -INFINITY };
+  populate_bounding_boxes(polygons, num_polygons, &mesh_box);
 
   for (int y = 0; y < terminal_height; y++) {
     for (int x = 0; x < terminal_width; x++) {
@@ -213,6 +218,9 @@ void render(Polygon polygons[], int num_polygons, int terminal_width, int termin
         .y = -(y + 0.5 - terminal_height / 2.0) * (EYE_HEIGHT / terminal_height)
       };
 
+      if (!is_within_bounding_box(terminal_coordinate, &mesh_box)) {
+        continue;
+      }
 
       for (int i = 0; i < num_polygons; i++) {
         if (is_contained(terminal_coordinate, &polygons[i])) {

@@ -37,7 +37,7 @@ ROTATE_COUNTERCLOCKWISE = ord('q')
 ROTATE_CLOCKWISE = ord('e')
 
 # TODO: Explain.
-@with_cool_down(0.5) # seconds
+@with_cool_down(0.05) # seconds
 def do_tick(stdscreen, width: int, height: int, mesh: mesh.Mesh):
   draw_frame(stdscreen, width, height, mesh)
   stdscreen.refresh()
